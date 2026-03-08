@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MaternalGuard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard
+                </h1>
+                <div class="flex items-center gap-6">
+                    <span class="text-gray-600">Welcome, <strong>{{ user.username }}</strong></span>
+                    <span class="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-semibold">
+                        {{ user.role|capitalize }}
+                    </span>
+                    <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Logout</a>
+                </div>
+            </div>
+        </div>
+        {% if user and user.role == 'patient' %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/predict" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/predict' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Risk Prediction</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Care Hub</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if user and user.role in ['doctor', 'admin'] %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/doctor/patients" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/patients' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Patients</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Clinical Care Hub</a>
+                    <a href="/doctor/notifications" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/notifications' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Notifications</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Dashboard</h2>
+            <p class="text-gray-600">Welcome to your health management portal</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {% if user.role == 'patient' %}
+                <!-- Patient Stats -->
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Predictions</p>
+                            <p class="text-3xl font-bold text-blue-600">{{ stats.get('total_predictions', 0) }}</p>
+                        </div>
+                        <i class="fas fa-chart-line text-blue-500 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-red-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">High Risk Cases</p>
+                            <p class="text-3xl font-bold text-red-600">{{ stats.get('high_risk', 0) }}</p>
+                        </div>
+                        <i class="fas fa-exclamation-triangle text-red-500 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Appointments</p>
+                            <p class="text-3xl font-bold text-green-600">{{ stats.get('appointments', 0) }}</p>
+                        </div>
+                        <i class="fas fa-calendar-check text-green-500 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Medical Records</p>
+                            <p class="text-3xl font-bold text-pink-600">{{ stats.get('medical_records', 0) }}</p>
+                        </div>
+                        <i class="fas fa-file-alt text-pink-600 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Doctor Stats -->
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Patients</p>
+                            <p class="text-3xl font-bold text-blue-600">{{ stats.get('total_patients', 0) }}</p>
+                        </div>
+                        <i class="fas fa-users text-blue-500 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-yellow-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Pending Appointments</p>
+                            <p class="text-3xl font-bold text-yellow-600">{{ stats.get('pending_appointments', 0) }}</p>
+                        </div>
+                        <i class="fas fa-clock text-yellow-500 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Confirmed Appointments</p>
+                            <p class="text-3xl font-bold text-green-600">{{ stats.get('confirmed_appointments', 0) }}</p>
+                        </div>
+                        <i class="fas fa-check-circle text-green-500 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm">Reports Created</p>
+                            <p class="text-3xl font-bold text-pink-600">{{ stats.get('reports_created', 0) }}</p>
+                        </div>
+                        <i class="fas fa-file-pdf text-pink-600 text-2xl opacity-30"></i>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {% if user.role == 'patient' %}
+                    <a href="/appointments" class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 text-center">
+                        <i class="fas fa-calendar-plus"></i> Appointments
+                    </a>
+                    <a href="/medical-records" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-center">
+                        <i class="fas fa-upload"></i> Medical Records
+                    </a>
+                    <a href="/reports" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-center">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a>
+                    <a href="/accuracy" class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 text-center">
+                        <i class="fas fa-brain"></i> Predictions
+                    </a>
+                    <a href="/addons" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-center">
+                        <i class="fas fa-puzzle-piece"></i> Care Hub
+                    </a>
+                {% else %}
+                    <a href="/appointments" class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 text-center">
+                        <i class="fas fa-calendar-check"></i> Appointments
+                    </a>
+                    <a href="/reports" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-center">
+                        <i class="fas fa-file-pdf"></i> Generate Reports
+                    </a>
+                    <a href="/accuracy" class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 text-center">
+                        <i class="fas fa-brain"></i> Predictions
+                    </a>
+                    <a href="/messages" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 text-center">
+                        <i class="fas fa-envelope"></i> Messages
+                    </a>
+                    <a href="/addons" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-center">
+                        <i class="fas fa-puzzle-piece"></i> Clinical Care Hub
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Data -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Recent Appointments -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Recent Appointments</h3>
+                {% if recent_appointments %}
+                <div class="space-y-3">
+                    {% for apt in recent_appointments[:5] %}
+                    <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-pink-500">
+                        <p class="font-semibold text-gray-800">{{ apt.reason or 'Appointment' }}</p>
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-calendar"></i>
+                            {{ apt.appointment_date.strftime('%Y-%m-%d %H:%M') if apt.appointment_date else 'TBD' }}
+                        </p>
+                        <span class="inline-block mt-1 px-2 py-1 rounded text-xs font-semibold
+                            {% if apt.status == 'confirmed' %}bg-green-100 text-green-700
+                            {% elif apt.status == 'pending' %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-red-100 text-red-700{% endif %}">
+                            {{ apt.status|capitalize }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">No appointments yet</p>
+                {% endif %}
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    {% if user.role == 'patient' %}Recent Predictions{% else %}Recent Reports{% endif %}
+                </h3>
+                {% if user.role == 'patient' and recent_predictions %}
+                <div class="space-y-3">
+                    {% for pred in recent_predictions %}
+                    <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-pink-500">
+                        <p class="font-semibold text-gray-800">Risk Level: <span class="text-pink-600">{{ pred.risk_level|capitalize }}</span></p>
+                        <p class="text-sm text-gray-600"><i class="fas fa-calendar"></i> {{ pred.created_at.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% elif user.role == 'doctor' and recent_reports %}
+                <div class="space-y-3">
+                    {% for report in recent_reports %}
+                    <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-pink-500">
+                        <p class="font-semibold text-gray-800">{{ report.title }}</p>
+                        <p class="text-sm text-gray-600"><i class="fas fa-calendar"></i> {{ report.created_at.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">No data yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

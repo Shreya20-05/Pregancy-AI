@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Assessment - MaternalGuard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .low-risk { color: #10b981; }
+        .mid-risk { color: #f59e0b; }
+        .high-risk { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-slate-50 p-6">
+    <nav class="mb-6 rounded-xl bg-white shadow-lg">
+        <div class="max-w-5xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard
+                </h1>
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-600">Welcome, <strong>{{ user.username }}</strong></span>
+                    <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Logout</a>
+                </div>
+            </div>
+            {% if user and user.role == 'patient' %}
+            <div class="border-t border-pink-100 py-3 flex flex-wrap items-center gap-2 text-sm">
+                <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                <a href="/predict" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/predict' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Risk Prediction</a>
+                <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Care Hub</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-pink-600">MaternalGuard Assessment</h1>
+                <p class="text-gray-600">Enter all current vitals for risk prediction.</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/accuracy" class="px-4 py-2 rounded-lg border border-indigo-600 text-indigo-600 hover:bg-indigo-50">Prediction History</a>
+            </div>
+        </header>
+
+        {% if error %}
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <div class="rounded-2xl border border-pink-100 bg-white p-6 shadow-lg">
+                <h2 class="mb-4 text-xl font-semibold text-gray-800">Maternal Vitals</h2>
+                <form action="/predict" method="post" class="space-y-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Age (years)</label>
+                            <input type="number" name="age" step="1" required value="{{ form_data.age if form_data else '' }}" class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">BMI</label>
+                            <input type="number" name="bmi" step="0.1" required value="{{ form_data.bmi if form_data else '' }}" class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Systolic BP</label>
+                            <input type="number" name="systolic_bp" step="1" required value="{{ form_data.systolic_bp if form_data else '120' }}" class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Diastolic BP</label>
+                            <input type="number" name="diastolic_bp" step="1" required value="{{ form_data.diastolic_bp if form_data else '80' }}" class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Blood Sugar (mg/dL)</label>
+                            <input type="number" name="blood_sugar" step="0.1" required value="{{ form_data.blood_sugar if form_data else '95' }}" class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Body Temperature (F)</label>
+                            <input type="number" name="body_temp" step="0.1" required value="{{ form_data.body_temp if form_data else '98.6' }}" class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Heart Rate (bpm)</label>
+                            <input type="number" name="heart_rate" step="1" required value="{{ form_data.heart_rate if form_data else '72' }}" class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Diabetes</label>
+                            <select name="diabetes" required class="mt-1 w-full rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-pink-300">
+                                <option value="0" {% if not form_data or form_data.diabetes == '0' %}selected{% endif %}>No</option>
+                                <option value="1" {% if form_data and form_data.diabetes == '1' %}selected{% endif %}>Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full rounded-lg bg-pink-600 py-3 font-bold text-white transition hover:bg-pink-700">
+                        Generate Risk Analysis
+                    </button>
+                </form>
+            </div>
+
+            <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg">
+                <h2 class="mb-2 text-xl font-semibold text-gray-800">Risk Assessment Result</h2>
+                {% if prediction_text %}
+                <div class="mt-4 rounded-xl border-2 border-dashed border-pink-200 p-6">
+                    <h3 class="text-3xl font-extrabold {{ risk_class }}">{{ prediction_text }}</h3>
+                    <p class="mt-4 text-gray-700 italic">{{ advice }}</p>
+                    <a href="/accuracy" class="mt-4 inline-block rounded bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
+                        View Prediction History
+                    </a>
+                </div>
+                {% else %}
+                <div class="py-12 text-gray-500">
+                    Fill the form and submit to get a risk prediction.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div class="rounded-2xl border border-indigo-100 bg-white p-6 shadow-lg lg:col-span-2">
+                <h3 class="text-lg font-bold text-gray-800">Care Actions</h3>
+                <p class="mt-1 text-sm text-gray-600">Book appointments, message your doctor, and review reports.</p>
+                <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <a href="/appointments" class="rounded-lg bg-pink-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-pink-700">
+                        Book Appointment
+                    </a>
+                    <a href="/messages" class="rounded-lg bg-emerald-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-700">
+                        Message Doctor
+                    </a>
+                    <a href="/reports" class="rounded-lg bg-purple-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-purple-700">
+                        View Reports
+                    </a>
+                </div>
+
+                {% if prediction_text == 'High' %}
+                <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    High-risk result detected. Please book an appointment and send a message to your doctor today.
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="rounded-2xl border border-pink-100 bg-white p-6 shadow-lg">
+                <h3 class="text-lg font-bold text-gray-800">Your Summary</h3>
+                <div class="mt-4 space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Pending Appointments</span>
+                        <span class="font-bold text-pink-600">{{ portal_summary.pending_appointments if portal_summary else 0 }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Confirmed Appointments</span>
+                        <span class="font-bold text-pink-600">{{ portal_summary.confirmed_appointments if portal_summary else 0 }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Unread Messages</span>
+                        <span class="font-bold text-pink-600">{{ portal_summary.unread_messages if portal_summary else 0 }}</span>
+                    </div>
+                    <div class="rounded-lg bg-gray-50 p-3 text-gray-700">
+                        <p class="text-xs uppercase text-gray-500">Next Confirmed Appointment</p>
+                        <p class="mt-1 font-semibold">{{ portal_summary.next_appointment_text if portal_summary else 'No confirmed appointment' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

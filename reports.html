@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - MaternalGuard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50" data-user-id="{{ user.id }}" data-user-role="{{ user.role }}">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard
+                </h1>
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-600">Welcome, <strong>{{ user.username if user and user.username else 'User' }}</strong></span>
+                    <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Logout</a>
+                </div>
+            </div>
+        </div>
+        {% if user and user.role == 'patient' %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/predict" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/predict' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Risk Prediction</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Care Hub</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if user and user.role in ['doctor', 'admin'] %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/doctor/patients" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/patients' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Patients</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Clinical Care Hub</a>
+                    <a href="/doctor/notifications" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/notifications' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Notifications</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        {% set reports = reports or [] %}
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-chart-bar text-pink-600"></i> Health Reports
+            </h2>
+            <p class="text-gray-600">View and download medical reports</p>
+        </div>
+
+        {% if user and user.role == 'doctor' %}
+        <button id="openGenerateBtn" class="mb-6 px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition">
+            <i class="fas fa-file-pdf"></i> Generate Report
+        </button>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for report in reports %}
+            <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition report-card" data-report-id="{{ report.id }}">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 report-title">{{ report.title|default('Untitled Report') }}</h3>
+                        <p class="text-sm text-gray-500 capitalize">{{ report.report_type|default('')|replace('_', ' ') }}</p>
+                    </div>
+                    <i class="fas fa-file-pdf text-red-500 text-2xl"></i>
+                </div>
+
+                <div class="mb-4 p-3 bg-gray-50 rounded max-h-20 overflow-hidden">
+                    <p class="text-gray-700 text-sm line-clamp-3 report-content">{{ report.content|default('No details provided') }}</p>
+                </div>
+
+                <div class="text-xs text-gray-500 space-y-1 mb-4">
+                    <p><i class="fas fa-calendar"></i> Generated: {{ (report.created_at|string)[:10] if report.created_at else 'N/A' }}</p>
+                    {% if report.from_date or report.to_date %}
+                    <p><i class="fas fa-calendar-alt"></i> Period: 
+                        {{ (report.from_date|string)[:10] if report.from_date else 'N/A' }}
+                        to
+                        {{ (report.to_date|string)[:10] if report.to_date else 'N/A' }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <div class="flex gap-2">
+                    <button class="view-report-btn flex-1 px-3 py-2 bg-pink-500 text-white rounded hover:bg-pink-600 transition text-sm">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                    <button class="download-report-btn flex-1 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-sm">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not reports %}
+        <div class="text-center py-16">
+            <i class="fas fa-file-alt text-gray-300 text-6xl mb-4"></i>
+            <p class="text-gray-500 text-lg">No reports available</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Generate Report Modal -->
+    <div id="generateReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 shadow-2xl">
+            <h3 class="text-2xl font-bold mb-4">Generate Health Report</h3>
+            <form id="generateReportForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-semibold mb-2">Patient</label>
+                        <select id="patientSelect" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-pink-500" required>
+                            <option value="">Select patient</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-semibold mb-2">Report Type</label>
+                        <select id="reportType" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-pink-500" required>
+                            <option value="">Select type</option>
+                            <option value="patient_health">Patient Health Summary</option>
+                            <option value="clinical_summary">Clinical Summary</option>
+                            <option value="trend_analysis">Trend Analysis</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-semibold mb-2">Title</label>
+                        <input type="text" id="reportTitle" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-pink-500" required placeholder="e.g., Weekly Risk Update">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-semibold mb-2">Start Date</label>
+                        <input type="date" id="fromDate" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-pink-500">
+                    </div>
+                    <div class="mb-4 md:col-span-2">
+                        <label class="block text-gray-700 font-semibold mb-2">Report Content</label>
+                        <textarea id="reportContent" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-pink-500" rows="5" required placeholder="Enter clinical observations..."></textarea>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <button type="button" class="close-modal-btn flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition font-bold">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Report Modal -->
+    <div id="viewReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto shadow-2xl">
+            <h3 id="reportViewTitle" class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2"></h3>
+            <p class="text-sm text-gray-500 mb-4">
+                <strong>Type:</strong> <span id="reportViewType"></span> | 
+                <strong>Generated:</strong> <span id="reportViewDate"></span>
+            </p>
+            <div id="reportViewContent" class="text-gray-700 whitespace-pre-wrap leading-relaxed mb-6 p-4 bg-gray-50 rounded max-h-96 overflow-y-auto"></div>
+            <div class="flex gap-2">
+                <button type="button" class="close-modal-btn flex-1 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition font-bold">Close</button>
+                <button type="button" id="printReportBtn" class="flex-1 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-bold">
+                    <i class="fas fa-print"></i> Print/Download
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const userRole = document.body.getAttribute('data-user-role');
+        const userId = parseInt(document.body.getAttribute('data-user-id'));
+
+        // Open generate report modal
+        document.getElementById('openGenerateBtn')?.addEventListener('click', () => {
+            loadPatients();
+            document.getElementById('generateReportModal').classList.remove('hidden');
+        });
+
+        // Close all modals
+        document.querySelectorAll('.close-modal-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.target.closest('.fixed').classList.add('hidden');
+            });
+        });
+
+        // View report
+        document.querySelectorAll('.view-report-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const card = e.target.closest('.report-card');
+                const reportId = card.dataset.reportId;
+                const title = card.querySelector('.report-title').textContent;
+                const type = card.querySelector('p.text-sm.text-gray-500').textContent;
+                const content = card.querySelector('.report-content').textContent;
+                const dateText = card.querySelectorAll('.text-xs.text-gray-500 p')[0]?.textContent.replace('Generated: ', '') || 'N/A';
+
+                document.getElementById('reportViewTitle').textContent = title;
+                document.getElementById('reportViewType').textContent = type;
+                document.getElementById('reportViewDate').textContent = dateText;
+                document.getElementById('reportViewContent').textContent = content;
+
+                document.getElementById('printReportBtn').addEventListener('click', () => {
+                    window.print();
+                });
+
+                document.getElementById('viewReportModal').classList.remove('hidden');
+            });
+        });
+
+        // Download report
+        document.querySelectorAll('.download-report-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                window.print();
+            });
+        });
+
+        // Load patients for dropdown
+        async function loadPatients() {
+            try {
+                const response = await fetch('/api/predictions');
+                const predictions = await response.json();
+
+                const select = document.getElementById('patientSelect');
+                select.innerHTML = '<option value="">Select patient</option>';
+
+                predictions.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.user_id;
+                    option.textContent = p.user_name || `Patient ${p.user_id}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading patients:', error);
+                alert('Could not load patients');
+            }
+        }
+
+        // Generate report
+        document.getElementById('generateReportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const patientId = document.getElementById('patientSelect').value;
+            if (!patientId) {
+                alert('Please select a patient');
+                return;
+            }
+
+            const reportData = {
+                user_id: parseInt(patientId),
+                report_type: document.getElementById('reportType').value,
+                title: document.getElementById('reportTitle').value,
+                content: document.getElementById('reportContent').value,
+                from_date: document.getElementById('fromDate').value || null,
+                to_date: new Date().toISOString().split('T')[0]
+            };
+
+            try {
+                const response = await fetch('/api/reports', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reportData)
+                });
+
+                if (response.ok) {
+                    alert('Report generated successfully!');
+                    document.getElementById('generateReportModal').classList.add('hidden');
+                    document.getElementById('generateReportForm').reset();
+                    location.reload();
+                } else {
+                    const errData = await response.json();
+                    alert(`Error: ${errData.error || 'Failed to generate report'}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Server connection error');
+            }
+        });
+
+        // Close modal on background click
+        window.addEventListener('click', (e) => {
+            const generateModal = document.getElementById('generateReportModal');
+            const viewModal = document.getElementById('viewReportModal');
+
+            if (e.target === generateModal) generateModal.classList.add('hidden');
+            if (e.target === viewModal) viewModal.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - MaternalGuard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50" data-user-id="{{ user.id }}" data-user-role="{{ user.role }}">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard
+                </h1>
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-600">Welcome, <strong>{{ user.username }}</strong></span>
+                    <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Logout</a>
+                </div>
+            </div>
+        </div>
+        {% if user and user.role == 'patient' %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/predict" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/predict' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Risk Prediction</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Care Hub</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if user and user.role in ['doctor', 'admin'] %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/doctor/patients" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/patients' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Patients</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Clinical Care Hub</a>
+                    <a href="/doctor/notifications" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/notifications' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Notifications</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[80vh]">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">
+                            <i class="fas fa-comments text-pink-600"></i> Messages
+                        </h2>
+                        <button id="refreshBtn" class="rounded bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-700 hover:bg-pink-200">
+                            Refresh
+                        </button>
+                    </div>
+                    <input type="text" id="conversationSearch" placeholder="Search users..." class="mt-4 w-full rounded-lg border px-3 py-2 text-sm focus:border-pink-500 focus:outline-none">
+                </div>
+                <div id="conversationsList" class="flex-1 overflow-y-auto">
+                    {% for conversation in conversations %}
+                    {% set unread = unread_counts.get(conversation.id, 0) if unread_counts else 0 %}
+                    <button class="conversation-btn w-full p-4 border-b hover:bg-pink-50 transition text-left focus:bg-pink-100" data-user-id="{{ conversation.id }}" data-username="{{ conversation.username }}" data-email="{{ conversation.email }}">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="font-semibold text-gray-800">{{ conversation.username }}</p>
+                            <span class="unread-badge min-w-6 rounded-full bg-red-500 px-2 py-0.5 text-center text-xs font-bold text-white {% if unread == 0 %}hidden{% endif %}" data-user-id="{{ conversation.id }}">{{ unread }}</span>
+                        </div>
+                        <p class="text-sm text-gray-600">{{ conversation.email }}</p>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                <div class="p-6 border-b bg-gradient-to-r from-pink-500 to-purple-500 text-white">
+                    <h3 id="chatHeader" class="text-xl font-bold">Select a conversation</h3>
+                </div>
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-4">
+                    <div class="text-center text-gray-500 py-16">
+                        <i class="fas fa-comments text-gray-300 text-6xl mb-4"></i>
+                        <p>Select a conversation to start messaging</p>
+                    </div>
+                </div>
+                <div id="chatInputArea" class="hidden p-6 border-t space-y-4">
+                    <div id="quickTemplates" class="hidden flex flex-wrap gap-2">
+                        <button type="button" class="template-btn rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-700 hover:bg-pink-200" data-template="Please share your latest symptoms and any recent test reports.">Request Symptoms</button>
+                        <button type="button" class="template-btn rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 hover:bg-green-200" data-template="Your appointment is confirmed. Please arrive 15 minutes early.">Appointment Confirm</button>
+                        <button type="button" class="template-btn rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700 hover:bg-yellow-200" data-template="Please monitor BP twice daily and update me if values cross 140/90.">BP Monitoring Advice</button>
+                    </div>
+                    <div class="flex gap-4">
+                        <input type="text" id="messageInput" placeholder="Type your message..." 
+                               class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-pink-500">
+                        <button onclick="sendMessage()" class="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="sendAsEmail" class="w-4 h-4 text-pink-600 rounded focus:ring-pink-500">
+                        <label for="sendAsEmail" class="text-sm text-gray-700">
+                            <i class="fas fa-envelope"></i> Send as Email (Doctor notes)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use global variables to manage state
+        let currentConversationId = null;
+        let refreshInterval = null;
+
+        // SAFELY get the user ID from the HTML data attribute to avoid Linter errors
+        const bodyTag = document.querySelector('body');
+        const currentUserId = bodyTag ? parseInt(bodyTag.getAttribute('data-user-id')) : null;
+        const currentUserRole = bodyTag ? bodyTag.getAttribute('data-user-role') : '';
+
+        if (currentUserRole === 'doctor' || currentUserRole === 'admin') {
+            document.getElementById('quickTemplates')?.classList.remove('hidden');
+        }
+
+        // Attach event listeners for conversation buttons
+        document.querySelectorAll('.conversation-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const userId = parseInt(this.getAttribute('data-user-id'));
+                const username = this.getAttribute('data-username');
+                selectConversation(userId, username);
+            });
+        });
+
+        async function selectConversation(userId, username) {
+            currentConversationId = userId;
+            document.getElementById('chatHeader').textContent = username;
+            document.getElementById('chatInputArea').classList.remove('hidden');
+            
+            await loadMessages(userId);
+            await refreshUnreadSummary();
+            
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(async () => {
+                await loadMessages(userId);
+                await refreshUnreadSummary();
+            }, 3000);
+        }
+
+        async function loadMessages(userId) {
+            try {
+                const response = await fetch(`/api/messages?with_user=${userId}`);
+                const messages = await response.json();
+                const chatMessages = document.getElementById('chatMessages');
+                const previousScrollHeight = chatMessages.scrollHeight;
+                
+                chatMessages.innerHTML = '';
+                messages.forEach(msg => {
+                    const isOwn = msg.sender_id === currentUserId;
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+                    messageDiv.innerHTML = `
+                        <div class="max-w-xs px-4 py-2 rounded-lg ${isOwn ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-800'}">
+                            <p>${msg.content}</p>
+                            <p class="text-[10px] ${isOwn ? 'text-pink-100' : 'text-gray-500'} mt-1 text-right">
+                                ${msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                                ${isOwn && msg.is_read ? ' • Read' : ''}
+                            </p>
+                        </div>`;
+                    chatMessages.appendChild(messageDiv);
+                });
+                
+                if (chatMessages.scrollHeight > previousScrollHeight) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendAsEmailCheckbox = document.getElementById('sendAsEmail');
+            const content = input.value;
+            if (!content.trim() || !currentConversationId) return;
+            try {
+                const response = await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        receiver_id: currentConversationId, 
+                        content: content,
+                        send_as_email: sendAsEmailCheckbox?.checked || false
+                    })
+                });
+                if (response.ok) {
+                    input.value = '';
+                    if (sendAsEmailCheckbox) sendAsEmailCheckbox.checked = false;
+                    await loadMessages(currentConversationId);
+                    await refreshUnreadSummary();
+                } else {
+                    alert('Error sending message');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message: ' + error.message);
+            }
+        }
+
+        document.getElementById('messageInput')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        document.getElementById('refreshBtn')?.addEventListener('click', async () => {
+            if (currentConversationId) {
+                await loadMessages(currentConversationId);
+            }
+            await refreshUnreadSummary();
+        });
+
+        document.getElementById('conversationSearch')?.addEventListener('input', (e) => {
+            const search = (e.target.value || '').toLowerCase();
+            document.querySelectorAll('.conversation-btn').forEach((btn) => {
+                const username = (btn.dataset.username || '').toLowerCase();
+                const email = (btn.dataset.email || '').toLowerCase();
+                btn.classList.toggle('hidden', !(username.includes(search) || email.includes(search)));
+            });
+        });
+
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = document.getElementById('messageInput');
+                if (input) input.value = btn.dataset.template || '';
+                input?.focus();
+            });
+        });
+
+        async function refreshUnreadSummary() {
+            try {
+                const response = await fetch('/api/messages/unread-summary');
+                if (!response.ok) return;
+                const summary = await response.json();
+
+                document.querySelectorAll('.unread-badge').forEach((badge) => {
+                    const userId = badge.dataset.userId;
+                    const count = Number(summary[userId] || 0);
+                    badge.textContent = String(count);
+                    badge.classList.toggle('hidden', count === 0);
+                });
+            } catch (error) {
+                console.error('Error refreshing unread summary:', error);
+            }
+        }
+
+        refreshUnreadSummary();
+    </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MaternalGuard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard
+                </h1>
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-600">Welcome, <strong>{{ user.username }}</strong> ({{ user.role|capitalize }})</span>
+                    <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg shadow-lg p-8 mb-8">
+            <h1 class="text-4xl font-bold mb-2">Welcome to MaternalGuard</h1>
+            <p class="text-lg opacity-90">Maternal Health Risk Assessment System</p>
+        </div>
+
+        <!-- Quick Stats -->
+        {% if user.role == 'patient' %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <i class="fas fa-heartbeat text-pink-600 text-3xl mb-3"></i>
+                    <p class="text-gray-600 text-sm">Last Assessment</p>
+                    <p class="text-2xl font-bold text-gray-800">Today</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <i class="fas fa-calendar-check text-blue-600 text-3xl mb-3"></i>
+                    <p class="text-gray-600 text-sm">Upcoming</p>
+                    <p class="text-2xl font-bold text-gray-800">Appointments</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <i class="fas fa-file-alt text-green-600 text-3xl mb-3"></i>
+                    <p class="text-gray-600 text-sm">Available</p>
+                    <p class="text-2xl font-bold text-gray-800">Reports</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Modules Grid -->
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-th"></i> Quick Access
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Module 1: Patient Dashboard / Doctor Patients -->
+            {% if user.role == 'patient' %}
+            <div onclick="window.location.href='/predict'" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer p-6">
+                <i class="fas fa-chart-line text-pink-600 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Health Assessment</h3>
+                <p class="text-gray-600">Monitor your vital signs and get risk predictions</p>
+                <button class="mt-4 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition w-full">
+                    <i class="fas fa-arrow-right"></i> Go to Assessment
+                </button>
+            </div>
+            {% else %}
+            <div onclick="window.location.href='/doctor/patients'" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer p-6">
+                <i class="fas fa-users text-pink-600 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Patient Management</h3>
+                <p class="text-gray-600">View and manage all patient assessments</p>
+                <button class="mt-4 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition w-full">
+                    <i class="fas fa-arrow-right"></i> View Patients
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- Module 6: Appointments -->
+            <div onclick="window.location.href='/appointments'" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer p-6">
+                <i class="fas fa-calendar-check text-blue-600 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Appointments</h3>
+                <p class="text-gray-600">Schedule and manage medical appointments</p>
+                <button class="mt-4 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition w-full">
+                    <i class="fas fa-arrow-right"></i> Manage Appointments
+                </button>
+            </div>
+
+            <!-- Module 7: Medical Records -->
+            {% if user.role == 'patient' %}
+            <div onclick="window.location.href='/medical-records'" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer p-6">
+                <i class="fas fa-file-medical text-green-600 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Medical Records</h3>
+                <p class="text-gray-600">Store and manage your health documents</p>
+                <button class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition w-full">
+                    <i class="fas fa-arrow-right"></i> View Records
+                </button>
+            </div>
+            {% else %}
+            <div onclick="window.location.href='/medical-records'" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer p-6">
+                <i class="fas fa-folder-open text-green-600 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Patient Records</h3>
+                <p class="text-gray-600">Access patient medical files and documents</p>
+                <button class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition w-full">
+                    <i class="fas fa-arrow-right"></i> View Records
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- Module 8: Chat/Messaging -->
+            <div onclick="window.location.href='/messages'" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer p-6">
+                <i class="fas fa-comments text-pink-600 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Messages</h3>
+                <p class="text-gray-600">Communicate with
+                {% if user.role == 'patient' %}
+                    your doctor
+                {% else %}
+                    your patients
+                {% endif %}
+                </p>
+                <button class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition w-full">
+                    <i class="fas fa-arrow-right"></i> Open Messages
+                </button>
+            </div>
+
+            <!-- Module 10: Reports & Analytics -->
+            <div onclick="window.location.href='/reports'" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition cursor-pointer p-6">
+                <i class="fas fa-chart-bar text-orange-600 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Reports & Analytics</h3>
+                <p class="text-gray-600">
+                {% if user.role == 'patient' %}
+                    View your health reports
+                {% else %}
+                    Generate clinical reports
+                {% endif %}
+                </p>
+                <button class="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition w-full">
+                    <i class="fas fa-arrow-right"></i> View Reports
+                </button>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="mt-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-star"></i> Key Features
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-600">
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">
+                        <i class="fas fa-robot text-pink-600"></i> AI-Powered Predictions
+                    </h4>
+                    <p class="text-gray-600">Advanced machine learning models for accurate maternal health risk assessment</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-600">
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">
+                        <i class="fas fa-shield-alt text-blue-600"></i> Secure & Private
+                    </h4>
+                    <p class="text-gray-600">Your health data is encrypted and stored securely with HIPAA compliance</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-600">
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">
+                        <i class="fas fa-handshake text-green-600"></i> Doctor Collaboration
+                    </h4>
+                    <p class="text-gray-600">Real-time collaboration between patients and healthcare providers</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-500">
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">
+                        <i class="fas fa-mobile-alt text-pink-600"></i> Mobile Friendly
+                    </h4>
+                    <p class="text-gray-600">Access your health information anytime, anywhere on any device</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="mt-12 bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-info-circle"></i> System Information
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                <div>
+                    <p class="font-semibold text-gray-800">System</p>
+                    <p>MaternalGuard v1.0</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800">Modules</p>
+                    <p>10 Integrated</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800">Users</p>
+                    <p>Active</p>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800">Status</p>
+                    <p class="text-green-600">✓ Online</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MaternalGuard - Maternal Health Risk Assessment{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50">
+    <!-- Sidebar Navigation -->
+    <div class="flex h-screen">
+        <nav class="w-64 bg-white shadow-lg hidden lg:flex flex-col">
+            <!-- Logo -->
+            <div class="p-6 border-b">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">Maternal Health System</p>
+            </div>
+
+            <!-- Menu Items -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-4">
+                    <!-- Patient Menu -->
+                    {% if user.role == 'patient' %}
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase mb-3">Patient</h3>
+                        <div class="space-y-2">
+                            <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-chart-line text-pink-600"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="{{ url_for('appointments') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-calendar-check text-pink-600"></i>
+                                <span>Appointments</span>
+                            </a>
+                            <a href="{{ url_for('medical_records') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-file-medical text-pink-600"></i>
+                                <span>Medical Records</span>
+                            </a>
+                            <a href="{{ url_for('messages') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-comments text-pink-600"></i>
+                                <span>Messages</span>
+                            </a>
+                            <a href="{{ url_for('reports') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-chart-bar text-pink-600"></i>
+                                <span>Reports</span>
+                            </a>
+                            <a href="{{ url_for('addons_dashboard') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-puzzle-piece text-pink-600"></i>
+                                <span>Care Hub</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Doctor Menu -->
+                    {% if user.role == 'doctor' %}
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase mb-3">Doctor</h3>
+                        <div class="space-y-2">
+                            <a href="{{ url_for('doctor_patients') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-users text-pink-600"></i>
+                                <span>Patients</span>
+                            </a>
+                            <a href="{{ url_for('appointments') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-calendar-check text-pink-600"></i>
+                                <span>Appointments</span>
+                            </a>
+                            <a href="{{ url_for('messages') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-comments text-pink-600"></i>
+                                <span>Messages</span>
+                            </a>
+                            <a href="{{ url_for('reports') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-chart-bar text-pink-600"></i>
+                                <span>Reports</span>
+                            </a>
+                            <a href="{{ url_for('addons_dashboard') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-pink-100 transition">
+                                <i class="fas fa-puzzle-piece text-pink-600"></i>
+                                <span>Clinical Care Hub</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- User Profile -->
+            <div class="p-4 border-t">
+                <div class="flex items-center gap-3 p-3 bg-pink-50 rounded-lg mb-3">
+                    <div class="w-10 h-10 bg-pink-600 text-white rounded-full flex items-center justify-center">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="flex-1 text-sm">
+                        <p class="font-semibold text-gray-800">{{ user.username }}</p>
+                        <p class="text-gray-500 capitalize">{{ user.role }}</p>
+                    </div>
+                </div>
+                <a href="/logout" class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-center text-sm font-semibold">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </nav>
+
+        <!-- Top Navigation Bar (Mobile) -->
+        <nav class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+            <div class="flex justify-between items-center h-16 px-4">
+                <h1 class="text-xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard
+                </h1>
+                <button onclick="toggleMobileMenu()" class="text-gray-600">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden">
+            <div class="absolute left-0 top-16 w-64 bg-white shadow-lg">
+                <!-- Menu content same as sidebar -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto lg:mt-0 mt-16">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

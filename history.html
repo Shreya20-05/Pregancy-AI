@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment History - PregnancyAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-pink-600 to-purple-600 text-white p-6 shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold">📊 Assessment History</h1>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-6">
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">All Assessments</h2>
+                <a href="/dashboard" class="text-pink-600 hover:underline font-bold">← Back to Dashboard</a>
+            </div>
+
+            {% if predictions.items %}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date & Time</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Age</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">BMI</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">BP (Sys/Dia)</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Blood Sugar</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Risk</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pred in predictions.items %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ (pred.created_at|string)[:16] if pred.created_at else '' }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ pred.age }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ "%.1f" | format(pred.bmi) }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ pred.systolic_bp }}/{{ pred.diastolic_bp }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ "%.1f" | format(pred.blood_sugar) }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-3 py-1 rounded-full font-semibold {% if pred.predicted_risk == 'High' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                                    {{ pred.predicted_risk }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ "%.1f" | format(pred.confidence) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-center gap-2 mt-8">
+                {% if predictions.has_prev %}
+                <a href="?page={{ predictions.prev_num }}" class="px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700">← Previous</a>
+                {% endif %}
+                
+                {% for page_num in predictions.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num == predictions.page %}
+                        <span class="px-4 py-2 bg-pink-600 text-white rounded font-bold">{{ page_num }}</span>
+                        {% else %}
+                        <a href="?page={{ page_num }}" class="px-4 py-2 border border-pink-600 text-pink-600 rounded hover:bg-pink-50">{{ page_num }}</a>
+                        {% endif %}
+                    {% else %}
+                    <span class="px-4 py-2">...</span>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if predictions.has_next %}
+                <a href="?page={{ predictions.next_num }}" class="px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700">Next →</a>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-gray-400 text-center py-12">No assessments found</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

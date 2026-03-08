@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Care Hub - MaternalGuard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-heart"></i> MaternalGuard Care Hub
+                </h1>
+                <div class="flex items-center gap-3">
+                    <a href="/dashboard" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        <i class="fas fa-arrow-left"></i> Dashboard
+                    </a>
+                    <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if user and user.role == 'patient' %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/predict" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/predict' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Risk Prediction</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Care Hub</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Care Hub Modules</h2>
+            <div id="apiStatus" class="mt-4 text-sm"></div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Care Hub Insights</h3>
+            {% if addon_stats and addon_stats.get('enabled') %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="p-4 rounded-lg border-l-4 border-pink-500 bg-pink-50">
+                        <p class="text-xs text-gray-600">Latest Symptom Alert</p>
+                        <p class="text-2xl font-bold text-pink-700 capitalize">{{ addon_stats.get('latest_symptom_level', 'none') }}</p>
+                        <p class="text-xs text-gray-500">Score: {{ addon_stats.get('latest_symptom_score', '-') }}</p>
+                    </div>
+                    <div class="p-4 rounded-lg border-l-4 border-indigo-500 bg-indigo-50">
+                        <p class="text-xs text-gray-600">Open Follow-ups</p>
+                        <p class="text-2xl font-bold text-indigo-700">{{ addon_stats.get('open_followups', 0) }}</p>
+                        <p class="text-xs text-gray-500">Pending or overdue tasks</p>
+                    </div>
+                    <div class="p-4 rounded-lg border-l-4 border-pink-500 bg-pink-50">
+                        <p class="text-xs text-gray-600">Medication Adherence</p>
+                        <p class="text-2xl font-bold text-pink-700">
+                            {% if addon_stats.get('adherence_rate') is not none %}
+                                {{ addon_stats.get('adherence_rate') }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-500">Active reminders: {{ addon_stats.get('active_reminders', 0) }}</p>
+                    </div>
+                    <div class="p-4 rounded-lg border-l-4 border-orange-500 bg-orange-50">
+                        <p class="text-xs text-gray-600">Latest Lab Status</p>
+                        <p class="text-2xl font-bold text-orange-700 capitalize">{{ addon_stats.get('latest_lab_status', 'none') }}</p>
+                        <p class="text-xs text-gray-500">{{ addon_stats.get('latest_lab_name') or 'No lab results yet' }}</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Recent Follow-up Tasks</h4>
+                    {% if addon_stats.get('recent_followups') %}
+                        <div class="space-y-2">
+                            {% for task in addon_stats.get('recent_followups') %}
+                                <div class="p-3 bg-gray-50 rounded-lg border-l-4
+                                    {% if task.priority == 'critical' %}border-red-500
+                                    {% elif task.priority == 'high' %}border-orange-500
+                                    {% else %}border-pink-500{% endif %}">
+                                    <p class="font-semibold text-gray-800">{{ task.title }}</p>
+                                    <p class="text-xs text-gray-600">
+                                        Priority: {{ task.priority|capitalize }} |
+                                        Status: {{ task.status|capitalize }} |
+                                        {{ task.created_at.strftime('%Y-%m-%d %H:%M') if task.created_at else '' }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No follow-up tasks yet.</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-gray-500">Care Hub insights are currently unavailable.</p>
+            {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-notes-medical text-pink-600"></i> Symptom Tracker</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="symHeadache" type="number" min="0" max="3" placeholder="Headache (0-3)" class="px-3 py-2 border rounded-lg">
+                    <input id="symSwelling" type="number" min="0" max="3" placeholder="Swelling (0-3)" class="px-3 py-2 border rounded-lg">
+                    <input id="symPain" type="number" min="0" max="3" placeholder="Pain (0-3)" class="px-3 py-2 border rounded-lg">
+                    <label class="flex items-center gap-2 text-sm"><input id="symBleeding" type="checkbox"> Bleeding</label>
+                    <label class="flex items-center gap-2 text-sm"><input id="symMovement" type="checkbox"> Reduced fetal movement</label>
+                </div>
+                <button id="btnSymptom" type="button" onclick="submitSymptom()" class="mt-4 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Save Symptom</button>
+                <p id="statusSymptom" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-pills text-blue-600"></i> Medication Reminder</h3>
+                <input id="medName" type="text" placeholder="Medication name" class="w-full mb-3 px-3 py-2 border rounded-lg">
+                <input id="medDose" type="text" placeholder="Dosage (ex: 1 tablet)" class="w-full mb-3 px-3 py-2 border rounded-lg">
+                <input id="medTimes" type="text" placeholder="Times CSV (ex: 08:00,20:00)" class="w-full mb-3 px-3 py-2 border rounded-lg">
+                <button id="btnMedication" type="button" onclick="submitMedication()" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Create Reminder</button>
+                <p id="statusMedication" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-apple-alt text-green-600"></i> Nutrition Log</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="nutWeight" type="number" step="0.1" placeholder="Weight (kg)" class="px-3 py-2 border rounded-lg">
+                    <input id="nutCalories" type="number" step="1" placeholder="Calories" class="px-3 py-2 border rounded-lg">
+                    <input id="nutProtein" type="number" step="0.1" placeholder="Protein (g)" class="px-3 py-2 border rounded-lg">
+                    <input id="nutWater" type="number" step="0.1" placeholder="Water (L)" class="px-3 py-2 border rounded-lg">
+                </div>
+                <button id="btnNutrition" type="button" onclick="submitNutrition()" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save Nutrition</button>
+                <p id="statusNutrition" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-baby text-pink-600"></i> Kick Count</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="kickCount" type="number" placeholder="Kicks count" class="px-3 py-2 border rounded-lg">
+                    <input id="kickDuration" type="number" placeholder="Duration (mins)" class="px-3 py-2 border rounded-lg">
+                </div>
+                <button id="btnKick" type="button" onclick="submitKickCount()" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save Kick Session</button>
+                <p id="statusKick" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-vial text-orange-600"></i> Lab Analyzer</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="labName" type="text" placeholder="Test (ex: hemoglobin)" class="px-3 py-2 border rounded-lg">
+                    <input id="labValue" type="number" step="0.01" placeholder="Value" class="px-3 py-2 border rounded-lg">
+                </div>
+                <button id="btnLab" type="button" onclick="submitLab()" class="mt-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">Save Lab Result</button>
+                <p id="statusLab" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-tasks text-indigo-600"></i> Follow-up Workflow</h3>
+                <button id="btnFollowup" type="button" onclick="createAutoFollowups()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Generate Auto Follow-ups</button>
+                <p id="statusFollowup" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-microscope text-purple-600"></i> Explainable AI</h3>
+                <input id="expPredictionId" type="number" placeholder="Prediction ID" class="w-full mb-3 px-3 py-2 border rounded-lg">
+                <button id="btnExplain" type="button" onclick="fetchExplainability()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Generate Explanation</button>
+                <p id="statusExplain" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-triangle-exclamation text-red-600"></i> Emergency SOS</h3>
+                <input id="sosMessage" type="text" placeholder="Emergency message" class="w-full mb-3 px-3 py-2 border rounded-lg">
+                <button id="btnSos" type="button" onclick="triggerSOS()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Trigger SOS</button>
+                <p id="statusSos" class="mt-2 text-sm text-gray-500"></p>
+            </section>
+        </div>
+
+        <div class="mt-6 bg-gray-900 text-green-300 rounded-xl p-4">
+            <p class="text-sm font-semibold mb-2">API Response Log</p>
+            <pre id="resultLog" class="text-xs whitespace-pre-wrap break-words max-h-80 overflow-y-auto">Ready.</pre>
+        </div>
+    </div>
+
+    <script>
+        async function addonRequest(path, method = 'GET', body = null) {
+            const options = { method, headers: {} };
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+            try {
+                const res = await fetch(path, options);
+                const text = await res.text();
+                let parsed;
+                try { parsed = JSON.parse(text); } catch { parsed = { raw: text }; }
+                const payload = { status: res.status, path, response: parsed };
+                logResult(payload);
+                return payload;
+            } catch (error) {
+                const payload = { status: 0, path, response: { error: String(error) } };
+                logResult(payload);
+                return payload;
+            }
+        }
+
+        function logResult(data) {
+            document.getElementById('resultLog').textContent = JSON.stringify(data, null, 2);
+        }
+
+        function setStatus(id, kind, message) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (kind === 'ok') el.className = 'mt-2 text-sm text-green-600 font-semibold';
+            else if (kind === 'error') el.className = 'mt-2 text-sm text-red-600 font-semibold';
+            else el.className = 'mt-2 text-sm text-gray-500';
+            el.textContent = message;
+        }
+
+        async function withButton(buttonId, run) {
+            const btn = document.getElementById(buttonId);
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+            }
+            try {
+                return await run();
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        async function checkStatus() {
+            const res = await fetch('/api/addons/meta');
+            const box = document.getElementById('apiStatus');
+            if (res.ok) {
+                box.innerHTML = '<span class="text-green-600 font-semibold"><i class="fas fa-check-circle"></i> Care Hub APIs connected.</span>';
+            } else {
+                box.innerHTML = '<span class="text-red-600 font-semibold"><i class="fas fa-times-circle"></i> Care Hub APIs not available.</span>';
+            }
+        }
+
+        function submitSymptom() {
+            return withButton('btnSymptom', async () => {
+                const result = await addonRequest('/api/addons/symptoms', 'POST', {
+                    headache_severity: Number(document.getElementById('symHeadache').value || 0),
+                    swelling_severity: Number(document.getElementById('symSwelling').value || 0),
+                    abdominal_pain_severity: Number(document.getElementById('symPain').value || 0),
+                    bleeding: document.getElementById('symBleeding').checked,
+                    reduced_fetal_movement: document.getElementById('symMovement').checked
+                });
+                if (result.status >= 200 && result.status < 300) setStatus('statusSymptom', 'ok', 'Saved symptom entry.');
+                else setStatus('statusSymptom', 'error', 'Failed to save symptom entry.');
+                return result;
+            });
+        }
+
+        function submitMedication() {
+            return withButton('btnMedication', async () => {
+                const medicationName = document.getElementById('medName').value.trim();
+                if (!medicationName) {
+                    setStatus('statusMedication', 'error', 'Medication name is required.');
+                    logResult({ status: 0, path: '/api/addons/medications', response: { error: 'medication_name is required' } });
+                    return;
+                }
+                const result = await addonRequest('/api/addons/medications', 'POST', {
+                    medication_name: medicationName,
+                    dosage: document.getElementById('medDose').value,
+                    times_csv: document.getElementById('medTimes').value
+                });
+                if (result.status >= 200 && result.status < 300) setStatus('statusMedication', 'ok', 'Reminder created.');
+                else setStatus('statusMedication', 'error', 'Failed to create reminder.');
+                return result;
+            });
+        }
+
+        function submitNutrition() {
+            return withButton('btnNutrition', async () => {
+                const result = await addonRequest('/api/addons/nutrition/logs', 'POST', {
+                    weight_kg: Number(document.getElementById('nutWeight').value || 0),
+                    calories_kcal: Number(document.getElementById('nutCalories').value || 0),
+                    protein_g: Number(document.getElementById('nutProtein').value || 0),
+                    water_liters: Number(document.getElementById('nutWater').value || 0)
+                });
+                if (result.status >= 200 && result.status < 300) setStatus('statusNutrition', 'ok', 'Nutrition log saved.');
+                else setStatus('statusNutrition', 'error', 'Failed to save nutrition log.');
+                return result;
+            });
+        }
+
+        function submitKickCount() {
+            return withButton('btnKick', async () => {
+                const result = await addonRequest('/api/addons/kick-count', 'POST', {
+                    kicks_count: Number(document.getElementById('kickCount').value || 0),
+                    duration_minutes: Number(document.getElementById('kickDuration').value || 0)
+                });
+                if (result.status >= 200 && result.status < 300) setStatus('statusKick', 'ok', 'Kick session saved.');
+                else setStatus('statusKick', 'error', 'Failed to save kick session.');
+                return result;
+            });
+        }
+
+        function submitLab() {
+            return withButton('btnLab', async () => {
+                const testName = document.getElementById('labName').value.trim();
+                const valueRaw = document.getElementById('labValue').value;
+                if (!testName) {
+                    setStatus('statusLab', 'error', 'Test name is required.');
+                    logResult({ status: 0, path: '/api/addons/labs/results', response: { error: 'test_name is required' } });
+                    return;
+                }
+                if (valueRaw === '') {
+                    setStatus('statusLab', 'error', 'Value is required.');
+                    logResult({ status: 0, path: '/api/addons/labs/results', response: { error: 'value is required' } });
+                    return;
+                }
+                const result = await addonRequest('/api/addons/labs/results', 'POST', {
+                    test_name: testName,
+                    value: Number(valueRaw)
+                });
+                if (result.status >= 200 && result.status < 300) setStatus('statusLab', 'ok', 'Lab result saved.');
+                else setStatus('statusLab', 'error', 'Failed to save lab result.');
+                return result;
+            });
+        }
+
+        function createAutoFollowups() {
+            return withButton('btnFollowup', async () => {
+                const result = await addonRequest('/api/addons/followups/auto-from-latest', 'POST', {});
+                if (result.status >= 200 && result.status < 300) {
+                    const created = result.response && typeof result.response.created_count !== 'undefined'
+                        ? result.response.created_count
+                        : 0;
+                    setStatus('statusFollowup', 'ok', `Auto follow-up completed. Created: ${created}.`);
+                } else {
+                    setStatus('statusFollowup', 'error', 'Failed to generate follow-ups.');
+                }
+                return result;
+            });
+        }
+
+        function fetchExplainability() {
+            return withButton('btnExplain', async () => {
+                const id = Number(document.getElementById('expPredictionId').value || 0);
+                if (!id) {
+                    setStatus('statusExplain', 'error', 'Prediction ID is required.');
+                    logResult({ status: 0, path: '/api/addons/explainability/:id', response: { error: 'prediction_id is required' } });
+                    return;
+                }
+                const result = await addonRequest(`/api/addons/explainability/${id}?save=true`);
+                if (result.status >= 200 && result.status < 300) setStatus('statusExplain', 'ok', 'Explanation generated.');
+                else setStatus('statusExplain', 'error', 'Failed. Check if prediction ID exists for your account.');
+                return result;
+            });
+        }
+
+        function triggerSOS() {
+            return withButton('btnSos', async () => {
+                const result = await addonRequest('/api/addons/sos/trigger', 'POST', {
+                    message: document.getElementById('sosMessage').value || 'Emergency support required.'
+                });
+                if (result.status >= 200 && result.status < 300) setStatus('statusSos', 'ok', 'SOS event triggered.');
+                else setStatus('statusSos', 'error', 'Failed to trigger SOS.');
+                return result;
+            });
+        }
+
+        checkStatus();
+    </script>
+</body>
+</html>

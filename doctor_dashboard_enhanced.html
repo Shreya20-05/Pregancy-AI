@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - PregnancyAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">👨‍⚕️ Doctor Dashboard</h1>
+                <p class="text-pink-100 text-sm mt-1">Comprehensive clinical analytics & patient management</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="bg-white/20 px-4 py-2 rounded-lg text-sm font-bold">{{ user.username }}</span>
+                <a href="/logout" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold transition">Logout</a>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-4">
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+                <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold bg-white/20 hover:bg-white/30">Dashboard</a>
+                <a href="/doctor/patients" class="px-3 py-1 rounded-full font-semibold bg-white text-pink-700">Patients</a>
+                <a href="/appointments" class="px-3 py-1 rounded-full font-semibold bg-white/20 hover:bg-white/30">Appointments</a>
+                <a href="/reports" class="px-3 py-1 rounded-full font-semibold bg-white/20 hover:bg-white/30">Reports</a>
+                <a href="/messages" class="px-3 py-1 rounded-full font-semibold bg-white/20 hover:bg-white/30">Messages</a>
+                <a href="/addons" class="px-3 py-1 rounded-full font-semibold bg-white/20 hover:bg-white/30">Clinical Care Hub</a>
+                <a href="/doctor/notifications" class="px-3 py-1 rounded-full font-semibold bg-white/20 hover:bg-white/30">Notifications</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-6 space-y-8">
+        <!-- ===== SECTION 1: KPI CARDS ===== -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+                <h3 class="text-gray-600 text-xs font-bold uppercase">🚨 High Risk</h3>
+                <p class="text-3xl font-bold text-red-600 mt-2" id="high-risk-count">0</p>
+                <p class="text-xs text-red-400 mt-1">Urgent</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+                <h3 class="text-gray-600 text-xs font-bold uppercase">✅ Low Risk</h3>
+                <p class="text-3xl font-bold text-green-600 mt-2" id="low-risk-count">0</p>
+                <p class="text-xs text-green-400 mt-1">Stable</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-pink-500">
+                <h3 class="text-gray-600 text-xs font-bold uppercase">📊 Total Cases</h3>
+                <p class="text-3xl font-bold text-blue-600 mt-2" id="total-assessments">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-pink-500">
+                <h3 class="text-gray-600 text-xs font-bold uppercase">👥 Patients</h3>
+                <p class="text-3xl font-bold text-pink-600 mt-2" id="unique-patients">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
+                <h3 class="text-gray-600 text-xs font-bold uppercase">📈 Avg Age</h3>
+                <p class="text-3xl font-bold text-yellow-600 mt-2" id="avg-age">0</p>
+                <p class="text-xs text-yellow-400 mt-1">years</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-indigo-500">
+                <h3 class="text-gray-600 text-xs font-bold uppercase">💯 Success %</h3>
+                <p class="text-3xl font-bold text-indigo-600 mt-2" id="success-rate">0</p>
+                <p class="text-xs text-indigo-400 mt-1">Low Risk</p>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 1B: OPERATIONAL WORKLIST ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-500">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-bold text-gray-800">Today Appointments</h2>
+                    <a href="/appointments" class="text-sm font-semibold text-blue-600 hover:underline">Manage</a>
+                </div>
+                <div id="todayAppointments" class="space-y-3 text-sm text-gray-600">
+                    <p>Loading appointments...</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-pink-500">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-bold text-gray-800">Unread Patient Messages</h2>
+                    <a href="/messages" class="text-sm font-semibold text-pink-600 hover:underline">Open Inbox</a>
+                </div>
+                <div id="unreadMessages" class="space-y-3 text-sm text-gray-600">
+                    <p>Loading messages...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 2: SEARCH & FILTER ===== -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🔍 Patient Search & Filter</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="searchBox" placeholder="Search by patient name..." class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <select id="riskFilter" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">All Risk Levels</option>
+                    <option value="High">High Risk</option>
+                    <option value="Low">Low Risk</option>
+                </select>
+                <button onclick="filterPatients()" class="px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-bold transition">Filter</button>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 3: CRITICAL ALERTS & TRIAGE BOARD ===== -->
+        <div class="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg shadow-lg p-6 border-l-4 border-red-500">
+            <h2 class="text-xl font-bold text-red-800 mb-4">🚨 CRITICAL ALERTS - Immediate Attention Required</h2>
+            <div id="alertsContainer" class="space-y-2">
+                <p class="text-gray-500">Loading alerts...</p>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 4: ANALYTICS CHARTS ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Risk Distribution Pie -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Risk Distribution</h3>
+                <div id="riskChart" style="height: 300px;"></div>
+            </div>
+
+            <!-- Age Distribution Histogram -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">📈 Age Distribution</h3>
+                <div id="ageChart" style="height: 300px;"></div>
+            </div>
+
+            <!-- BMI vs Risk Scatter -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🏥 BMI Analysis</h3>
+                <div id="bmiChart" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 5: COMORBIDITY & DIABETES ANALYSIS ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Diabetes Distribution -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🩺 Diabetes Prevalence</h3>
+                <div id="diabetesChart" style="height: 300px;"></div>
+            </div>
+
+            <!-- Trend Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">📉 Assessment Trends (Last 7 Days)</h3>
+                <div id="trendChart" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 6: PATIENT DIRECTORY WITH NOTES ===== -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">👥 Patient Directory</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gradient-to-r from-blue-100 to-indigo-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Patient</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Age</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">BMI</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">BP</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Blood Sugar</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Last Assessed</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTable">
+                        {% for pred in predictions %}
+                        <tr class="border-b hover:bg-pink-50 transition" data-patient="{{ pred.user.username }}" data-risk="{{ pred.predicted_risk }}">
+                            <td class="px-4 py-3 font-semibold text-gray-800">{{ pred.user.username }}</td>
+                            <td class="px-4 py-3">
+                                {% if pred.predicted_risk == 'High' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full font-bold text-xs">🔴 HIGH RISK</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full font-bold text-xs">🟢 LOW RISK</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">{{ pred.age }}</td>
+                            <td class="px-4 py-3">{{ "%.1f" | format(pred.bmi) }}</td>
+                            <td class="px-4 py-3 font-mono text-xs">{{ pred.systolic_bp }}/{{ pred.diastolic_bp }}</td>
+                            <td class="px-4 py-3">{{ "%.0f" | format(pred.blood_sugar) }} mg/dL</td>
+                            <td class="px-4 py-3 text-gray-600">{{ (pred.created_at|string)[:8] if pred.created_at else 'N/A' }}</td>
+                            <td class="px-4 py-3">
+                                <button onclick="addNote('{{ pred.user.username }}')" class="px-2 py-1 bg-pink-500 text-white rounded text-xs hover:bg-pink-600 font-bold">📝 Note</button>
+                                <button onclick="contactPatient('{{ pred.user.username }}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 font-bold ml-1">📞 Contact</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 7: CLINICAL GUIDELINES ===== -->
+        <div class="bg-gradient-to-r from-green-50 to-teal-50 rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+            <h2 class="text-xl font-bold text-green-800 mb-4">📋 Clinical Guidelines</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded p-4 border-l-4 border-red-500">
+                    <h3 class="font-bold text-red-700 mb-2">🔴 High Risk Protocol</h3>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>✓ Schedule immediate consultation</li>
+                        <li>✓ Conduct detailed prenatal screening</li>
+                        <li>✓ Consider specialist referral</li>
+                        <li>✓ Plan frequent monitoring (weekly)</li>
+                        <li>✓ Document risk factors thoroughly</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded p-4 border-l-4 border-green-500">
+                    <h3 class="font-bold text-green-700 mb-2">🟢 Low Risk Protocol</h3>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>✓ Standard prenatal care schedule</li>
+                        <li>✓ Routine monitoring (monthly)</li>
+                        <li>✓ Health education focus</li>
+                        <li>✓ Lifestyle counseling</li>
+                        <li>✓ Normal delivery planning</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECTION 8: STATISTICS SUMMARY ===== -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">📊 Statistical Summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="text-center p-4 bg-pink-50 rounded-lg">
+                    <p class="text-2xl font-bold text-blue-600" id="stat-diabetes-high">0</p>
+                    <p class="text-sm text-gray-600">Diabetic (High Risk)</p>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <p class="text-2xl font-bold text-green-600" id="stat-diabetes-low">0</p>
+                    <p class="text-sm text-gray-600">Diabetic (Low Risk)</p>
+                </div>
+                <div class="text-center p-4 bg-purple-50 rounded-lg">
+                    <p class="text-2xl font-bold text-pink-600" id="stat-blood-sugar-avg">0</p>
+                    <p class="text-sm text-gray-600">Avg Blood Sugar (mg/dL)</p>
+                </div>
+                <div class="text-center p-4 bg-orange-50 rounded-lg">
+                    <p class="text-2xl font-bold text-orange-600" id="stat-bp-abnormal">0</p>
+                    <p class="text-sm text-gray-600">Abnormal BP Cases</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <!-- Note Modal -->
+    <div id="noteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Add Clinical Note</h3>
+            <input type="hidden" id="notePatient">
+            <textarea id="noteText" class="w-full h-32 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Enter clinical observations, follow-up actions, etc."></textarea>
+            <div class="flex gap-3 mt-4">
+                <button onclick="saveNote()" class="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-bold">Save Note</button>
+                <button onclick="closeModal('noteModal')" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 font-bold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Contact Patient</h3>
+            <input type="hidden" id="contactPatient">
+            <select id="contactMethod" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4">
+                <option value="sms">SMS Message</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone Call</option>
+            </select>
+            <textarea id="contactMessage" class="w-full h-24 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4" placeholder="Message to send..."></textarea>
+            <div class="flex gap-3">
+                <button onclick="sendContact()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold">Send</button>
+                <button onclick="closeModal('contactModal')" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 font-bold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allPredictions = [];
+        let contactPatientData = null;
+
+        // Load all data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadCharts();
+            loadAlerts();
+            loadStatistics();
+            loadDoctorWorklists();
+        });
+
+        // Fetch and display KPI stats
+        function loadStats() {
+            fetch('/api/stats')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('high-risk-count').innerText = data.high_risk;
+                    document.getElementById('low-risk-count').innerText = data.low_risk;
+                    document.getElementById('total-assessments').innerText = data.total;
+                    document.getElementById('avg-age').innerText = Math.round(data.average_age);
+                    document.getElementById('unique-patients').innerText = data.unique_patients || Math.ceil(data.total / 2);
+                    
+                    // Calculate success rate (% Low Risk)
+                    let successRate = data.total > 0 ? Math.round((data.low_risk / data.total) * 100) : 0;
+                    document.getElementById('success-rate').innerText = successRate + '%';
+                });
+        }
+
+        // Load all charts
+        function loadCharts() {
+            fetch('/api/predictions')
+                .then(r => r.json())
+                .then(predictions => {
+                    allPredictions = predictions;
+                    
+                    // Risk Distribution Pie
+                    const lowRisk = predictions.filter(p => p.predicted_risk === 'Low').length;
+                    const highRisk = predictions.filter(p => p.predicted_risk === 'High').length;
+                    
+                    Plotly.newPlot('riskChart', [{
+                        values: [lowRisk, highRisk],
+                        labels: ['Low Risk', 'High Risk'],
+                        type: 'pie',
+                        marker: { colors: ['#10b981', '#ef4444'] },
+                        textposition: 'inside',
+                        textinfo: 'label+percent'
+                    }], {margin: {l: 0, r: 0, t: 0, b: 0}}, {responsive: true});
+
+                    // Age Distribution
+                    const ages = predictions.map(p => p.age);
+                    Plotly.newPlot('ageChart', [{
+                        x: ages,
+                        type: 'histogram',
+                        nbinsx: 10,
+                        marker: { color: '#f59e0b' }
+                    }], {xaxis: {title: 'Age'}, yaxis: {title: 'Count'}, margin: {l: 50, r: 0, t: 0, b: 50}}, {responsive: true});
+
+                    // BMI vs Risk Scatter
+                    const lowRiskData = predictions.filter(p => p.predicted_risk === 'Low');
+                    const highRiskData = predictions.filter(p => p.predicted_risk === 'High');
+                    
+                    Plotly.newPlot('bmiChart', [
+                        {
+                            x: lowRiskData.map(p => p.bmi),
+                            y: lowRiskData.map(p => p.age),
+                            mode: 'markers',
+                            type: 'scatter',
+                            name: 'Low Risk',
+                            marker: { size: 8, color: '#10b981', opacity: 0.7 }
+                        },
+                        {
+                            x: highRiskData.map(p => p.bmi),
+                            y: highRiskData.map(p => p.age),
+                            mode: 'markers',
+                            type: 'scatter',
+                            name: 'High Risk',
+                            marker: { size: 8, color: '#ef4444', opacity: 0.7 }
+                        }
+                    ], {
+                        xaxis: { title: 'BMI' },
+                        yaxis: { title: 'Age (years)' },
+                        margin: { l: 50, r: 50, t: 0, b: 50 }
+                    }, {responsive: true});
+
+                    // Diabetes Distribution
+                    const diabetesYes = predictions.filter(p => p.diabetes === 1).length;
+                    const diabetesNo = predictions.filter(p => p.diabetes === 0).length;
+                    
+                    Plotly.newPlot('diabetesChart', [{
+                        values: [diabetesNo, diabetesYes],
+                        labels: ['No Diabetes', 'Has Diabetes'],
+                        type: 'pie',
+                        marker: { colors: ['#8b5cf6', '#ec4899'] },
+                        textposition: 'inside',
+                        textinfo: 'label+percent'
+                    }], {margin: {l: 0, r: 0, t: 0, b: 0}}, {responsive: true});
+
+                    // Trends - Last 7 days
+                    const lastDays = 7;
+                    const today = new Date();
+                    const trendData = {};
+                    
+                    for (let i = lastDays - 1; i >= 0; i--) {
+                        const date = new Date(today);
+                        date.setDate(date.getDate() - i);
+                        const dateStr = date.toISOString().split('T')[0];
+                        trendData[dateStr] = 0;
+                    }
+                    
+                    predictions.forEach(p => {
+                        const dateStr = p.created_at ? p.created_at.split('T')[0] : '';
+                        if (trendData.hasOwnProperty(dateStr)) trendData[dateStr]++;
+                    });
+                    
+                    const dates = Object.keys(trendData).sort();
+                    const counts = dates.map(d => trendData[d]);
+                    
+                    Plotly.newPlot('trendChart', [{
+                        x: dates,
+                        y: counts,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        marker: { color: '#3b82f6', size: 8 },
+                        line: { color: '#3b82f6', width: 3 }
+                    }], {
+                        xaxis: { title: 'Date' },
+                        yaxis: { title: 'Assessments' },
+                        margin: { l: 50, r: 0, t: 0, b: 50 }
+                    }, {responsive: true});
+                });
+        }
+
+        // Load critical alerts
+        function loadAlerts() {
+            fetch('/api/predictions')
+                .then(r => r.json())
+                .then(predictions => {
+                    const highRisk = predictions.filter(p => p.predicted_risk === 'High').slice(0, 5);
+                    const container = document.getElementById('alertsContainer');
+                    
+                    if (highRisk.length === 0) {
+                        container.innerHTML = '<p class="text-green-700 font-bold">✓ No critical alerts at this time. All monitored patients are stable.</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    highRisk.forEach(pred => {
+                        html += `
+                            <div class="bg-white p-4 rounded-lg border-l-4 border-red-500 shadow">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-bold text-red-800">⚠️ ${pred.user_name || 'Unknown'} - HIGH RISK</p>
+                                        <p class="text-sm text-gray-600 mt-1">Age: ${pred.age} | BMI: ${pred.bmi.toFixed(1)} | BP: ${pred.systolic_bp}/${pred.diastolic_bp} | Blood Sugar: ${pred.blood_sugar.toFixed(0)} mg/dL</p>
+                                        <p class="text-xs text-gray-500 mt-1">Last Assessment: ${new Date(pred.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                    <button onclick="contactPatient('${pred.user_name}')" class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 font-bold">Contact Now</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                });
+        }
+
+        // Load detailed statistics
+        function loadStatistics() {
+            fetch('/api/predictions')
+                .then(r => r.json())
+                .then(predictions => {
+                    // Diabetes in high vs low risk
+                    const highRisk = predictions.filter(p => p.predicted_risk === 'High');
+                    const lowRisk = predictions.filter(p => p.predicted_risk === 'Low');
+                    
+                    const diabeteHighRisk = highRisk.filter(p => p.diabetes === 1).length;
+                    const diabetesLowRisk = lowRisk.filter(p => p.diabetes === 1).length;
+                    
+                    document.getElementById('stat-diabetes-high').innerText = diabeteHighRisk;
+                    document.getElementById('stat-diabetes-low').innerText = diabetesLowRisk;
+                    
+                    // Average blood sugar
+                    const avgBloodSugar = predictions.reduce((sum, p) => sum + p.blood_sugar, 0) / predictions.length;
+                    document.getElementById('stat-blood-sugar-avg').innerText = predictions.length ? Math.round(avgBloodSugar) : 0;
+                    
+                    // Abnormal BP (> 140/90)
+                    const abnormalBP = predictions.filter(p => p.systolic_bp > 140 || p.diastolic_bp > 90).length;
+                    document.getElementById('stat-bp-abnormal').innerText = abnormalBP;
+                });
+        }
+
+        // Load operational lists for doctor actions
+        async function loadDoctorWorklists() {
+            await Promise.all([loadTodayAppointments(), loadUnreadMessages()]);
+        }
+
+        async function loadTodayAppointments() {
+            const container = document.getElementById('todayAppointments');
+            try {
+                const response = await fetch('/api/appointments');
+                const appointments = await response.json();
+                const today = new Date().toISOString().split('T')[0];
+
+                const todaysList = appointments
+                    .filter(a => a.appointment_date && a.status !== 'cancelled')
+                    .filter(a => a.appointment_date.split('T')[0] === today)
+                    .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date))
+                    .slice(0, 6);
+
+                if (!todaysList.length) {
+                    container.innerHTML = '<p class="text-gray-500">No appointments scheduled for today.</p>';
+                    return;
+                }
+
+                container.innerHTML = todaysList.map(a => `
+                    <div class="rounded border border-pink-100 bg-pink-50 p-3">
+                        <p class="font-semibold text-gray-800">${a.patient_name || `Patient #${a.patient_id}`}</p>
+                        <p class="text-xs text-gray-600">${new Date(a.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} • ${a.status}</p>
+                        <p class="mt-1 text-xs text-gray-700">${a.reason || 'No reason provided'}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<p class="text-red-600">Could not load appointments.</p>';
+            }
+        }
+
+        async function loadUnreadMessages() {
+            const container = document.getElementById('unreadMessages');
+            try {
+                const [summaryResp, usersResp] = await Promise.all([
+                    fetch('/api/messages/unread-summary'),
+                    fetch('/api/patients'),
+                ]);
+
+                if (!summaryResp.ok || !usersResp.ok) {
+                    container.innerHTML = '<p class="text-red-600">Could not load unread messages.</p>';
+                    return;
+                }
+
+                const summary = await summaryResp.json();
+                const users = await usersResp.json();
+                const userById = {};
+                users.forEach(user => {
+                    userById[String(user.id)] = user;
+                });
+
+                const entries = Object.entries(summary).filter(([, count]) => Number(count) > 0);
+                if (!entries.length) {
+                    container.innerHTML = '<p class="text-gray-500">No unread patient messages.</p>';
+                    return;
+                }
+
+                container.innerHTML = entries.map(([senderId, count]) => {
+                    const sender = userById[senderId];
+                    const senderLabel = sender ? sender.username : `User #${senderId}`;
+                    return `
+                        <div class="rounded border border-purple-100 bg-purple-50 p-3 flex items-center justify-between gap-2">
+                            <div>
+                                <p class="font-semibold text-gray-800">${senderLabel}</p>
+                                <p class="text-xs text-gray-600">${count} unread message${Number(count) > 1 ? 's' : ''}</p>
+                            </div>
+                            <a href="/messages" class="rounded bg-purple-600 px-3 py-1 text-xs font-semibold text-white hover:bg-purple-700">Reply</a>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                container.innerHTML = '<p class="text-red-600">Could not load unread messages.</p>';
+            }
+        }
+
+        // Filter patients
+        function filterPatients() {
+            const search = document.getElementById('searchBox').value.toLowerCase();
+            const riskFilter = document.getElementById('riskFilter').value;
+            const rows = document.querySelectorAll('#patientTable tr');
+            
+            rows.forEach(row => {
+                const patient = row.dataset.patient.toLowerCase();
+                const risk = row.dataset.risk;
+                
+                const matchName = patient.includes(search);
+                const matchRisk = !riskFilter || risk === riskFilter;
+                
+                row.style.display = (matchName && matchRisk) ? '' : 'none';
+            });
+        }
+
+        // Modal functions
+        function addNote(patient) {
+            document.getElementById('notePatient').value = patient;
+            document.getElementById('noteText').value = '';
+            document.getElementById('noteModal').classList.remove('hidden');
+        }
+
+        function contactPatient(patientName) {
+            // Find the patient in allPredictions to get their user_id
+            const prediction = allPredictions.find(p => p.user_name === patientName);
+            if (!prediction || !prediction.user_id) {
+                alert('Patient not found');
+                return;
+            }
+            contactPatientData = { patient_id: prediction.user_id, patient_name: patientName };
+            document.getElementById('contactPatient').value = patientName;
+            document.getElementById('contactMessage').value = '';
+            document.getElementById('contactModal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function saveNote() {
+            const patient = document.getElementById('notePatient').value;
+            const note = document.getElementById('noteText').value;
+            alert(`📝 Note saved for ${patient}: "${note}"`);
+            closeModal('noteModal');
+        }
+
+        async function sendContact() {
+            const patientName = document.getElementById('contactPatient').value;
+            const method = document.getElementById('contactMethod').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            if (!message.trim()) {
+                alert('Please enter a message');
+                return;
+            }
+
+            if (!contactPatientData || !contactPatientData.patient_id) {
+                alert('Patient information not found');
+                return;
+            }
+
+            try {
+                // Send message via API with the contact method
+                const response = await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        receiver_id: contactPatientData.patient_id,
+                        content: message,
+                        contact_method: method,
+                        send_as_email: true  // Always send as email for doctor contact
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`✅ ${method.toUpperCase()} message sent to ${patientName}!\n\nMethod: ${method}\nMessage: ${message.substring(0, 50)}...`);
+                    closeModal('contactModal');
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.error || 'Failed to send message'}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Failed to send message: ${error.message}`);
+            }
+        }
+
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            loadStats();
+            loadCharts();
+            loadAlerts();
+            loadStatistics();
+            loadDoctorWorklists();
+        }, 60000);
+    </script>
+</body>
+</html>

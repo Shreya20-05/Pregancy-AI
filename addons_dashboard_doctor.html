@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Care Hub - MaternalGuard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-pink-50 to-purple-50">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-pink-600">
+                    <i class="fas fa-stethoscope"></i> Clinical Care Hub
+                </h1>
+                <div class="flex items-center gap-3">
+                    <a href="/dashboard" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        <i class="fas fa-arrow-left"></i> Dashboard
+                    </a>
+                    <a href="/logout" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if user and user.role in ['doctor', 'admin'] %}
+        <div class="border-t border-pink-100 bg-pink-50/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center gap-2 py-3 text-sm">
+                    <a href="/dashboard" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Dashboard</a>
+                    <a href="/doctor/patients" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/patients' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Patients</a>
+                    <a href="/appointments" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/appointments' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Appointments</a>
+                    <a href="/reports" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/reports' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Reports</a>
+                    <a href="/messages" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/messages' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Messages</a>
+                    <a href="/addons" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/addons' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Clinical Care Hub</a>
+                    <a href="/doctor/notifications" class="px-3 py-1 rounded-full font-semibold {% if request.path == '/doctor/notifications' %}bg-pink-600 text-white{% else %}bg-white text-pink-700 hover:bg-pink-100{% endif %}">Notifications</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Doctor Read-Only Care Hub View</h2>
+            <p class="text-gray-600">
+                This page is intentionally read-only for doctors/admins.
+                Patient self-entry actions are available only on the patient addon page.
+            </p>
+        </div>
+
+        {% if clinical_data.get('enabled') %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+                    <p class="text-xs text-gray-600">High/Critical Symptoms</p>
+                    <p class="text-2xl font-bold text-red-700">{{ clinical_data.get('recent_symptoms', [])|length }}</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4 border-l-4 border-orange-500">
+                    <p class="text-xs text-gray-600">Flagged Labs</p>
+                    <p class="text-2xl font-bold text-orange-700">{{ clinical_data.get('recent_labs', [])|length }}</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4 border-l-4 border-indigo-500">
+                    <p class="text-xs text-gray-600">Open Follow-ups</p>
+                    <p class="text-2xl font-bold text-indigo-700">{{ clinical_data.get('open_followups', [])|length }}</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4 border-l-4 border-pink-500">
+                    <p class="text-xs text-gray-600">Recent SOS</p>
+                    <p class="text-2xl font-bold text-pink-700">{{ clinical_data.get('recent_sos', [])|length }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <section class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-notes-medical text-red-600"></i> Recent Symptom Alerts</h3>
+                    {% if clinical_data.get('recent_symptoms') %}
+                        <div class="space-y-2">
+                            {% for row in clinical_data.get('recent_symptoms') %}
+                                <div class="p-3 bg-gray-50 rounded-lg border-l-4 {% if row.alert_level == 'critical' %}border-red-500{% else %}border-orange-500{% endif %}">
+                                    <p class="font-semibold text-gray-800">{{ row.patient_name }}</p>
+                                    <p class="text-xs text-gray-600">
+                                        Level: {{ row.alert_level|capitalize }} | Score: {{ row.alert_score }} |
+                                        {{ row.recorded_at.strftime('%Y-%m-%d %H:%M') if row.recorded_at else '' }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No high/critical symptom alerts.</p>
+                    {% endif %}
+                </section>
+
+                <section class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-vial text-orange-600"></i> Recent Flagged Labs</h3>
+                    {% if clinical_data.get('recent_labs') %}
+                        <div class="space-y-2">
+                            {% for row in clinical_data.get('recent_labs') %}
+                                <div class="p-3 bg-gray-50 rounded-lg border-l-4 {% if row.status == 'critical' %}border-red-500{% else %}border-orange-500{% endif %}">
+                                    <p class="font-semibold text-gray-800">{{ row.patient_name }} - {{ row.test_name }}</p>
+                                    <p class="text-xs text-gray-600">
+                                        {{ row.value }} {{ row.unit or '' }} | Status: {{ row.status|capitalize }} |
+                                        {{ row.recorded_at.strftime('%Y-%m-%d %H:%M') if row.recorded_at else '' }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No flagged lab results.</p>
+                    {% endif %}
+                </section>
+
+                <section class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-tasks text-indigo-600"></i> Open Follow-up Tasks</h3>
+                    {% if clinical_data.get('open_followups') %}
+                        <div class="space-y-2">
+                            {% for row in clinical_data.get('open_followups') %}
+                                <div class="p-3 bg-gray-50 rounded-lg border-l-4
+                                    {% if row.priority == 'critical' %}border-red-500
+                                    {% elif row.priority == 'high' %}border-orange-500
+                                    {% else %}border-pink-500{% endif %}">
+                                    <p class="font-semibold text-gray-800">{{ row.patient_name }} - {{ row.title }}</p>
+                                    <p class="text-xs text-gray-600">
+                                        Priority: {{ row.priority|capitalize }} | Status: {{ row.status|capitalize }} |
+                                        {{ row.created_at.strftime('%Y-%m-%d %H:%M') if row.created_at else '' }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No open follow-up tasks.</p>
+                    {% endif %}
+                </section>
+
+                <section class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3"><i class="fas fa-triangle-exclamation text-pink-600"></i> Recent SOS Events</h3>
+                    {% if clinical_data.get('recent_sos') %}
+                        <div class="space-y-2">
+                            {% for row in clinical_data.get('recent_sos') %}
+                                <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-pink-500">
+                                    <p class="font-semibold text-gray-800">{{ row.patient_name }}</p>
+                                    <p class="text-xs text-gray-600">
+                                        {{ row.message or 'Emergency SOS triggered' }} |
+                                        {{ row.triggered_at.strftime('%Y-%m-%d %H:%M') if row.triggered_at else '' }}
+                                    </p>
+                                    {% if row.location %}
+                                        <p class="text-xs text-gray-500">Location: {{ row.location }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-gray-500 text-sm">No SOS events found.</p>
+                    {% endif %}
+                </section>
+            </div>
+        {% else %}
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <p class="text-gray-600">Clinical Care Hub data is not available in this runtime.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
